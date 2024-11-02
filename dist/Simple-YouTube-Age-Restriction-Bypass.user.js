@@ -940,7 +940,23 @@
         lastPlayerUnlockVideoId = videoId;
         lastPlayerUnlockReason = reason;
 
-        const unlockedPlayerResponse = getUnlockedPlayerResponse(videoId, reason);
+        const response = localStorage.getItem('yt_unlocked');
+        if (response === null) {
+            if (window.inworkupdate === true) return;
+            window.inworkupdate = true;
+            setTimeout(async function() {
+                localStorage.setItem('yt_unlocked', JSON.stringify(await getYoutubeVideoInfo(videoId, 'web')));
+                window.location.reload();
+            }, 0);
+            return;
+        }
+
+        const unlockedPlayerResponse = JSON.parse(response);
+        if (unlockedPlayerResponse.responseContext?.mainAppWebResponseContext?.datasyncId) {
+            if (window.forcePoTokenId !== unlockedPlayerResponse.responseContext.mainAppWebResponseContext.datasyncId)
+                window.forcePoTokenId = unlockedPlayerResponse.responseContext.mainAppWebResponseContext.datasyncId;
+        }
+        localStorage.removeItem('yt_unlocked');
 
         // account proxy error?
         if (unlockedPlayerResponse.errorMessage) {
